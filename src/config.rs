@@ -63,8 +63,7 @@ impl Config {
             return Self::load_from_path(&PathBuf::from(p));
         }
 
-        if let Some(config_dir) = dirs::config_dir() {
-            let config_path = config_dir.join("wake-speaker").join("config.toml");
+        if let Some(config_path) = Self::config_path() {
             if config_path.exists() {
                 return Self::load_from_path(&config_path);
             }
@@ -93,7 +92,17 @@ impl Config {
         }
     }
 
+    /// Returns the config file path.
+    /// On macOS/Linux: ~/.config/wake-speaker/config.toml
+    /// On Windows: %APPDATA%/wake-speaker/config.toml
     pub fn config_path() -> Option<PathBuf> {
-        dirs::config_dir().map(|d| d.join("wake-speaker").join("config.toml"))
+        #[cfg(any(target_os = "macos", target_os = "linux"))]
+        {
+            dirs::home_dir().map(|h| h.join(".config").join("wake-speaker").join("config.toml"))
+        }
+        #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+        {
+            dirs::config_dir().map(|d| d.join("wake-speaker").join("config.toml"))
+        }
     }
 }

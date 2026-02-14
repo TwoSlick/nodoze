@@ -6,6 +6,11 @@ use std::time::Duration;
 
 use crate::config::Config;
 
+/// Get the human-readable name of a device
+fn device_name(device: &Device) -> Option<String> {
+    device.description().ok().map(|d| d.name().to_string())
+}
+
 /// Find an output device by name, or return the default
 pub fn get_device(name: &str) -> Result<Device, String> {
     let host = cpal::default_host();
@@ -21,7 +26,7 @@ pub fn get_device(name: &str) -> Result<Device, String> {
         .map_err(|e| format!("Failed to enumerate devices: {}", e))?;
 
     for device in devices {
-        if let Ok(dev_name) = device.name() {
+        if let Some(dev_name) = device_name(&device) {
             if dev_name.to_lowercase().contains(&name.to_lowercase()) {
                 return Ok(device);
             }
@@ -41,11 +46,11 @@ pub fn list_devices() -> Result<Vec<String>, String> {
     let mut names = Vec::new();
     let default_name = host
         .default_output_device()
-        .and_then(|d| d.name().ok())
+        .and_then(|d| device_name(&d))
         .unwrap_or_default();
 
     for device in devices {
-        if let Ok(name) = device.name() {
+        if let Some(name) = device_name(&device) {
             let is_default = name == default_name;
             names.push(if is_default {
                 format!("{} (default)", name)
@@ -61,7 +66,7 @@ pub fn list_devices() -> Result<Vec<String>, String> {
 /// Play a sine wave tone with fade in/out
 pub fn play_tone(config: &Config) -> Result<(), String> {
     let device = get_device(&config.device)?;
-    let dev_name = device.name().unwrap_or_else(|_| "unknown".into());
+    let dev_name = device_name(&device).unwrap_or_else(|| "unknown".into());
     log::info!(
         "Playing {}Hz tone for {}s at {:.0}% volume on '{}'",
         config.frequency,
@@ -74,7 +79,7 @@ pub fn play_tone(config: &Config) -> Result<(), String> {
         .default_output_config()
         .map_err(|e| format!("Failed to get default output config: {}", e))?;
 
-    let sample_rate = supported_config.sample_rate().0 as f64;
+    let sample_rate = supported_config.sample_rate() as f64;
     let channels = supported_config.channels() as usize;
 
     let frequency = config.frequency;

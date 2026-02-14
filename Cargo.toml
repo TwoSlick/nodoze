@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/yourusername/wake-speaker"
 
 [dependencies]
-cpal = "0.15"
+cpal = "0.17"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 toml = "0.8"

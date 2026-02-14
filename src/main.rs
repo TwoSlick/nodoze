@@ -2,6 +2,7 @@ mod audio;
 mod config;
 mod daemon;
 mod service;
+mod wizard;
 
 use clap::{Parser, Subcommand};
 
@@ -33,6 +34,9 @@ enum Commands {
 
     /// Show active configuration
     Config,
+
+    /// Interactive configuration wizard
+    Setup,
 
     /// Install as a system service (LaunchAgent/systemd/Task Scheduler)
     Install,
@@ -92,6 +96,12 @@ fn main() {
                     path.display(),
                     if path.exists() { "(found)" } else { "(not found, using defaults)" }
                 );
+            }
+        }
+        Commands::Setup => {
+            if let Err(e) = wizard::run() {
+                log::error!("{}", e);
+                std::process::exit(1);
             }
         }
         Commands::Install => {
