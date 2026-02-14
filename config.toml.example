@@ -1,0 +1,21 @@
+# Wake Speaker Configuration
+# Place this file at ~/.config/wake-speaker/config.toml
+
+# Frequency of the tone in Hz (20 Hz is near the bottom of human hearing)
+frequency = 20.0
+
+# Duration of each tone in seconds
+duration = 15
+
+# Interval between tones in seconds (540 = 9 minutes)
+interval = 540
+
+# Fade in/out duration in seconds (prevents clicks/pops)
+fade_duration = 1.0
+
+# Volume (0.0 to 1.0) — 0.05 = 5%, enough to keep speakers awake without distortion
+volume = 0.05
+
+# Audio output device name (empty string = system default)
+# Use `wake-speaker list-devices` to see available devices
+device = ""
