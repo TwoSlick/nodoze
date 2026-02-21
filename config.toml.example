@@ -1,5 +1,5 @@
-# Wake Speaker Configuration
-# Place this file at ~/.config/wake-speaker/config.toml
+# NoDoze Configuration
+# Place this file at ~/.config/nodoze/config.toml
 
 # Frequency of the tone in Hz (20 Hz is near the bottom of human hearing)
 frequency = 20.0
@@ -17,5 +17,5 @@ fade_duration = 1.0
 volume = 0.05
 
 # Audio output device name (empty string = system default)
-# Use `wake-speaker list-devices` to see available devices
+# Use `nodoze list-devices` to see available devices
 device = ""

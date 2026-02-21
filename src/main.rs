@@ -8,12 +8,12 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
-    name = "wake-speaker",
+    name = "nodoze",
     about = "Keep your speakers awake by playing an inaudible tone periodically",
     version
 )]
 struct Cli {
-    /// Path to config file (default: ~/.config/wake-speaker/config.toml)
+    /// Path to config file (default: ~/.config/nodoze/config.toml)
     #[arg(short, long, global = true)]
     config: Option<String>,
 

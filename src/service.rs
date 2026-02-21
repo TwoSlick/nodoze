@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 
 #[cfg(target_os = "macos")]
-const LAUNCHD_LABEL: &str = "com.wakespeaker.daemon";
+const LAUNCHD_LABEL: &str = "com.nodoze.daemon";
 #[cfg(target_os = "linux")]
-const SYSTEMD_SERVICE: &str = "wake-speaker";
+const SYSTEMD_SERVICE: &str = "nodoze";
 
-/// Install wake-speaker as a system service
+/// Install nodoze as a system service
 pub fn install() -> Result<(), String> {
     let exe = std::env::current_exe()
         .map_err(|e| format!("Failed to get executable path: {}", e))?;
@@ -23,7 +23,7 @@ pub fn install() -> Result<(), String> {
     return Err("Service installation not supported on this platform".to_string());
 }
 
-/// Uninstall wake-speaker system service
+/// Uninstall nodoze system service
 pub fn uninstall() -> Result<(), String> {
     #[cfg(target_os = "macos")]
     return uninstall_launchd();
@@ -71,9 +71,9 @@ fn install_launchd(exe: &PathBuf) -> Result<(), String> {
     <key>KeepAlive</key>
     <true/>
     <key>StandardErrorPath</key>
-    <string>/tmp/wake-speaker.err</string>
+    <string>/tmp/nodoze.err</string>
     <key>StandardOutPath</key>
-    <string>/tmp/wake-speaker.out</string>
+    <string>/tmp/nodoze.out</string>
   </dict>
 </plist>"#,
         label = LAUNCHD_LABEL,
@@ -142,7 +142,7 @@ fn install_systemd(exe: &PathBuf) -> Result<(), String> {
 
     let unit = format!(
         r#"[Unit]
-Description=Wake Speaker - Keep speakers alive with inaudible tones
+Description=NoDoze - Keep speakers alive with inaudible tones
 After=sound.target
 
 [Service]
@@ -216,7 +216,7 @@ fn install_windows_task(exe: &PathBuf) -> Result<(), String> {
         .args([
             "/Create",
             "/SC", "ONLOGON",
-            "/TN", "WakeSpeaker",
+            "/TN", "NoDoze",
             "/TR", &format!("\"{}\" run", exe_str),
             "/F",
         ])
@@ -226,10 +226,10 @@ fn install_windows_task(exe: &PathBuf) -> Result<(), String> {
     if status.success() {
         // Also start it immediately
         let _ = std::process::Command::new("schtasks")
-            .args(["/Run", "/TN", "WakeSpeaker"])
+            .args(["/Run", "/TN", "NoDoze"])
             .status();
 
-        println!("Service installed as scheduled task: WakeSpeaker");
+        println!("Service installed as scheduled task: NoDoze");
         Ok(())
     } else {
         Err("schtasks /Create failed".to_string())
@@ -240,16 +240,16 @@ fn install_windows_task(exe: &PathBuf) -> Result<(), String> {
 fn uninstall_windows_task() -> Result<(), String> {
     // End any running instance first
     let _ = std::process::Command::new("schtasks")
-        .args(["/End", "/TN", "WakeSpeaker"])
+        .args(["/End", "/TN", "NoDoze"])
         .status();
 
     let status = std::process::Command::new("schtasks")
-        .args(["/Delete", "/TN", "WakeSpeaker", "/F"])
+        .args(["/Delete", "/TN", "NoDoze", "/F"])
         .status()
         .map_err(|e| format!("Failed to run schtasks: {}", e))?;
 
     if status.success() {
-        println!("Service uninstalled: WakeSpeaker");
+        println!("Service uninstalled: NoDoze");
         Ok(())
     } else {
         Err("schtasks /Delete failed (task may not exist)".to_string())

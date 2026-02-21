@@ -1,8 +1,24 @@
-# wake-speaker
+# nodoze
 
 Keep your speakers awake by playing an inaudible tone periodically.
 
-Many external speakers and audio devices enter sleep mode after a period of silence (typically ~10 minutes). Waking them can take several seconds of sustained audio, which means short sounds like notifications get swallowed. **wake-speaker** prevents this by periodically playing a near-inaudible 20Hz tone that keeps the speakers active.
+Many external speakers and audio devices enter sleep mode after a period of silence (typically ~10 minutes). Waking them can take several seconds of sustained audio, which means short sounds like notifications get swallowed. **nodoze** prevents this by periodically playing a near-inaudible 20Hz tone that keeps the speakers active.
+
+## Install
+
+```sh
+# macOS / Linux
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/TwoSlick/nodoze/releases/latest/download/nodoze-installer.sh | sh
+
+# Windows
+powershell -ExecutionPolicy ByPass -c "irm https://github.com/TwoSlick/nodoze/releases/latest/download/nodoze-installer.ps1 | iex"
+
+# Homebrew
+brew install TwoSlick/tap/nodoze
+
+# From source
+cargo install nodoze
+```
 
 ## Features
 
@@ -11,7 +27,7 @@ Many external speakers and audio devices enter sleep mode after a period of sile
 - **Single binary** — ~2.5MB, no runtime needed
 - **Sleep/wake aware** — detects system sleep via wall-clock tracking and plays immediately on wake
 - **Configurable** — frequency, duration, interval, volume, fade, and device selection
-- **Interactive setup** — `wake-speaker setup` wizard walks through configuration
+- **Interactive setup** — `nodoze setup` wizard walks through configuration
 - **Service install** — one command to run at login (LaunchAgent, systemd, Task Scheduler)
 
 ## Quick Start
@@ -21,16 +37,16 @@ Many external speakers and audio devices enter sleep mode after a period of sile
 cargo build --release
 
 # Run the setup wizard
-./target/release/wake-speaker setup
+./target/release/nodoze setup
 
 # Test with a single tone
-./target/release/wake-speaker once
+./target/release/nodoze once
 
 # Run the daemon
-./target/release/wake-speaker run
+./target/release/nodoze run
 
 # Install as a system service (starts on login)
-./target/release/wake-speaker install
+./target/release/nodoze install
 ```
 
 ## Commands
@@ -47,9 +63,9 @@ cargo build --release
 
 ## Configuration
 
-Config file location: `~/.config/wake-speaker/config.toml`
+Config file location: `~/.config/nodoze/config.toml`
 
-Run `wake-speaker setup` to generate one interactively, or create it manually:
+Run `nodoze setup` to generate one interactively, or create it manually:
 
 ```toml
 # Frequency of the tone in Hz (20 Hz is near the bottom of human hearing)
@@ -68,11 +84,11 @@ fade_duration = 1.0
 volume = 0.05
 
 # Audio output device name (empty string = system default)
-# Use `wake-speaker list-devices` to see available devices
+# Use `nodoze list-devices` to see available devices
 device = ""
 ```
 
-All values have sensible defaults. The config file is optional — without it, wake-speaker uses the defaults shown above.
+All values have sensible defaults. The config file is optional — without it, nodoze uses the defaults shown above.
 
 ### Why these defaults?
 
@@ -84,15 +100,15 @@ All values have sensible defaults. The config file is optional — without it, w
 
 ## Service Installation
 
-`wake-speaker install` registers the daemon to start automatically at login:
+`nodoze install` registers the daemon to start automatically at login:
 
 | Platform | Mechanism | File |
 |----------|-----------|------|
-| macOS | LaunchAgent | `~/Library/LaunchAgents/com.wakespeaker.daemon.plist` |
-| Linux | systemd user unit | `~/.config/systemd/user/wake-speaker.service` |
-| Windows | Task Scheduler | Task named `WakeSpeaker` |
+| macOS | LaunchAgent | `~/Library/LaunchAgents/com.nodoze.daemon.plist` |
+| Linux | systemd user unit | `~/.config/systemd/user/nodoze.service` |
+| Windows | Task Scheduler | Task named `NoDoze` |
 
-On macOS and Linux, the service auto-restarts if it crashes. Remove with `wake-speaker uninstall`.
+On macOS and Linux, the service auto-restarts if it crashes. Remove with `nodoze uninstall`.
 
 ## Sleep/Wake Handling
 
@@ -110,12 +126,12 @@ This ensures your speakers never stay asleep after your machine wakes up.
 Requires Rust 2021 edition. Install via [rustup](https://rustup.rs/) (recommended) or your platform's package manager.
 
 ```sh
-git clone https://github.com/yourusername/wake-speaker.git
-cd wake-speaker
+git clone https://github.com/TwoSlick/nodoze.git
+cd nodoze
 cargo build --release
 ```
 
-The binary is at `./target/release/wake-speaker` (or `wake-speaker.exe` on Windows).
+The binary is at `./target/release/nodoze` (or `nodoze.exe` on Windows).
 
 ## Development Setup
 

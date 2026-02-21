@@ -93,16 +93,16 @@ impl Config {
     }
 
     /// Returns the config file path.
-    /// On macOS/Linux: ~/.config/wake-speaker/config.toml
-    /// On Windows: %APPDATA%/wake-speaker/config.toml
+    /// On macOS/Linux: ~/.config/nodoze/config.toml
+    /// On Windows: %APPDATA%/nodoze/config.toml
     pub fn config_path() -> Option<PathBuf> {
         #[cfg(any(target_os = "macos", target_os = "linux"))]
         {
-            dirs::home_dir().map(|h| h.join(".config").join("wake-speaker").join("config.toml"))
+            dirs::home_dir().map(|h| h.join(".config").join("nodoze").join("config.toml"))
         }
         #[cfg(not(any(target_os = "macos", target_os = "linux")))]
         {
-            dirs::config_dir().map(|d| d.join("wake-speaker").join("config.toml"))
+            dirs::config_dir().map(|d| d.join("nodoze").join("config.toml"))
         }
     }
 }

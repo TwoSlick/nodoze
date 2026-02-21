@@ -1,0 +1,168 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      manifest: ${{ steps.plan.outputs.manifest }}
+      tag: ${{ steps.plan.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dist
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/latest/download/cargo-dist-installer.sh | sh
+      - name: Plan release
+        id: plan
+        run: |
+          dist plan --output-format=json --no-local-paths > manifest.json
+          echo "manifest=$(cat manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+  build-local-artifacts:
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-14
+          - target: x86_64-apple-darwin
+            runner: macos-13
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-22.04
+          - target: x86_64-pc-windows-msvc
+            runner: windows-2022
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dist (Unix)
+        if: runner.os != 'Windows'
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/latest/download/cargo-dist-installer.sh | sh
+      - name: Install dist (Windows)
+        if: runner.os == 'Windows'
+        run: powershell -ExecutionPolicy ByPass -c "irm https://github.com/axodotdev/cargo-dist/releases/latest/download/cargo-dist-installer.ps1 | iex"
+      - name: Install ALSA dev headers
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+      - name: Build artifacts
+        run: dist build --target=${{ matrix.target }} --artifacts=local --output-format=json > dist-manifest.json
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ matrix.target }}
+          path: target/distrib/
+
+  build-global-artifacts:
+    needs: plan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dist
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/latest/download/cargo-dist-installer.sh | sh
+      - name: Build global artifacts
+        run: dist build --artifacts=global --output-format=json > dist-manifest.json
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-global
+          path: target/distrib/
+
+  publish-release:
+    needs: [plan, build-local-artifacts, build-global-artifacts]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: artifacts
+          merge-multiple: true
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "artifacts/*"
+          tag: ${{ needs.plan.outputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generateReleaseNotes: true
+
+  publish-homebrew:
+    needs: [plan, publish-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: artifacts
+          merge-multiple: true
+      - name: Generate Homebrew formula
+        env:
+          TAG: ${{ needs.plan.outputs.tag }}
+        run: |
+          VERSION="${TAG#v}"
+          REPO="https://github.com/TwoSlick/nodoze/releases/download/${TAG}"
+
+          # Compute checksums
+          MAC_ARM_TAR=$(ls artifacts/nodoze-aarch64-apple-darwin.tar.gz 2>/dev/null || ls artifacts/*aarch64-apple-darwin*.tar.gz 2>/dev/null | head -1)
+          MAC_X86_TAR=$(ls artifacts/nodoze-x86_64-apple-darwin.tar.gz 2>/dev/null || ls artifacts/*x86_64-apple-darwin*.tar.gz 2>/dev/null | head -1)
+          LINUX_TAR=$(ls artifacts/nodoze-x86_64-unknown-linux-gnu.tar.gz 2>/dev/null || ls artifacts/*x86_64-unknown-linux-gnu*.tar.gz 2>/dev/null | head -1)
+
+          MAC_ARM_SHA=$(sha256sum "$MAC_ARM_TAR" | cut -d' ' -f1)
+          MAC_X86_SHA=$(sha256sum "$MAC_X86_TAR" | cut -d' ' -f1)
+          LINUX_SHA=$(sha256sum "$LINUX_TAR" | cut -d' ' -f1)
+
+          MAC_ARM_FILENAME=$(basename "$MAC_ARM_TAR")
+          MAC_X86_FILENAME=$(basename "$MAC_X86_TAR")
+          LINUX_FILENAME=$(basename "$LINUX_TAR")
+
+          cat > nodoze.rb <<FORMULA
+          class Nodoze < Formula
+            desc "Keep your speakers awake by playing an inaudible tone periodically"
+            homepage "https://github.com/TwoSlick/nodoze"
+            version "${VERSION}"
+            license "MIT"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "${REPO}/${MAC_ARM_FILENAME}"
+                sha256 "${MAC_ARM_SHA}"
+              else
+                url "${REPO}/${MAC_X86_FILENAME}"
+                sha256 "${MAC_X86_SHA}"
+              end
+            end
+
+            on_linux do
+              url "${REPO}/${LINUX_FILENAME}"
+              sha256 "${LINUX_SHA}"
+            end
+
+            def install
+              bin.install "nodoze"
+            end
+          end
+          FORMULA
+      - name: Push formula to tap
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/TwoSlick/homebrew-tap.git tap
+          mkdir -p tap/Formula
+          cp nodoze.rb tap/Formula/nodoze.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/nodoze.rb
+          git commit -m "Update nodoze to ${TAG}" || echo "No changes to commit"
+          git push

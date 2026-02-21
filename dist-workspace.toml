@@ -1,0 +1,15 @@
+[dist]
+cargo-dist-version = "0.28.0"
+ci = ["github"]
+targets = [
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+]
+installers = ["shell", "powershell", "homebrew"]
+tap = "TwoSlick/homebrew-tap"
+publish-jobs = ["homebrew"]
+
+[dist.dependencies.apt]
+libasound2-dev = '*'
