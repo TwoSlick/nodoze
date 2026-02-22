@@ -6,7 +6,7 @@ use crate::config::Config;
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
 const RETRY_DELAY: Duration = Duration::from_secs(5);
 
-/// Run the wake-speaker daemon loop.
+/// Run the nodoze daemon loop.
 ///
 /// Uses wall-clock time (SystemTime) to track intervals rather than
 /// monotonic sleep. This correctly handles system sleep/wake:
@@ -16,7 +16,7 @@ const RETRY_DELAY: Duration = Duration::from_secs(5);
 ///   immediately detect that the interval has elapsed and play a tone
 pub fn run(config: &Config) {
     log::info!(
-        "Starting wake-speaker daemon: {}Hz tone, {}s duration, every {}s",
+        "Starting nodoze daemon: {}Hz tone, {}s duration, every {}s",
         config.frequency,
         config.duration,
         config.interval
