@@ -1,3 +1,6 @@
+[workspace]
+members = ["./"]
+
 [dist]
 cargo-dist-version = "0.28.0"
 ci = ["github"]
