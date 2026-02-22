@@ -4,6 +4,16 @@ Keep your speakers awake by playing an inaudible tone periodically.
 
 Many external speakers and audio devices enter sleep mode after a period of silence (typically ~10 minutes). Waking them can take several seconds of sustained audio, which means short sounds like notifications get swallowed. **nodoze** prevents this by periodically playing a near-inaudible 20Hz tone that keeps the speakers active.
 
+## Features
+
+- **No external dependencies** — uses [cpal](https://github.com/RustAudio/cpal) for native audio (CoreAudio, WASAPI, ALSA)
+- **Cross-platform** — macOS, Linux, and Windows
+- **Single binary** — ~2.5MB, no runtime needed
+- **Sleep/wake aware** — detects system sleep via wall-clock tracking and plays immediately on wake
+- **Configurable** — frequency, duration, interval, volume, fade, and device selection
+- **Interactive setup** — `nodoze setup` wizard walks through configuration
+- **Service install** — one command to run at login (LaunchAgent, systemd, Task Scheduler)
+
 ## Install
 
 ```sh
@@ -19,16 +29,6 @@ powershell -ExecutionPolicy ByPass -c "irm https://github.com/TwoSlick/nodoze/re
 # From source
 cargo install --git https://github.com/TwoSlick/nodoze.git
 ```
-
-## Features
-
-- **No external dependencies** — uses [cpal](https://github.com/RustAudio/cpal) for native audio (CoreAudio, WASAPI, ALSA)
-- **Cross-platform** — macOS, Linux, and Windows
-- **Single binary** — ~2.5MB, no runtime needed
-- **Sleep/wake aware** — detects system sleep via wall-clock tracking and plays immediately on wake
-- **Configurable** — frequency, duration, interval, volume, fade, and device selection
-- **Interactive setup** — `nodoze setup` wizard walks through configuration
-- **Service install** — one command to run at login (LaunchAgent, systemd, Task Scheduler)
 
 ## Quick Start
 
@@ -118,18 +118,6 @@ The daemon uses wall-clock time (`SystemTime`) rather than monotonic sleep to tr
 
 This ensures your speakers never stay asleep after your machine wakes up.
 
-## Building
-
-Requires Rust 2021 edition. Install via [rustup](https://rustup.rs/) (recommended) or your platform's package manager.
-
-```sh
-git clone https://github.com/TwoSlick/nodoze.git
-cd nodoze
-cargo build --release
-```
-
-The binary is at `./target/release/nodoze` (or `nodoze.exe` on Windows).
-
 ## Development Setup
 
 ### macOS
@@ -184,6 +172,18 @@ cargo run -- list-devices   # verify audio device enumeration
 cargo run -- once           # play a single tone (confirms audio output works)
 cargo run -- config         # show resolved configuration
 ```
+
+## Building
+
+Requires Rust 2021 edition. Install via [rustup](https://rustup.rs/) (recommended) or your platform's package manager.
+
+```sh
+git clone https://github.com/TwoSlick/nodoze.git
+cd nodoze
+cargo build --release
+```
+
+The binary is at `./target/release/nodoze` (or `nodoze.exe` on Windows).
 
 ## License
 
