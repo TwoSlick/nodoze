@@ -11,6 +11,12 @@ fn device_name(device: &Device) -> Option<String> {
     device.description().ok().map(|d| d.name().to_string())
 }
 
+/// Returns true for null/dummy audio devices that produce no output
+fn is_null_device(name: &str) -> bool {
+    let lower = name.to_lowercase();
+    lower.contains("discard") || lower.contains("null")
+}
+
 /// Find an output device by name, or return the default
 pub fn get_device(name: &str) -> Result<Device, String> {
     let host = cpal::default_host();
@@ -51,6 +57,9 @@ pub fn list_devices() -> Result<Vec<String>, String> {
 
     for device in devices {
         if let Some(name) = device_name(&device) {
+            if is_null_device(&name) {
+                continue;
+            }
             let is_default = name == default_name;
             names.push(if is_default {
                 format!("{} (default)", name)

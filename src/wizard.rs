@@ -113,46 +113,33 @@ fn prompt_device() -> Result<String, String> {
 
     println!();
     println!("Available output devices:");
-    let mut default_idx: usize = 0;
+    println!("  1. System default");
     for (i, name) in devices.iter().enumerate() {
-        let num = i + 1;
-        if name.ends_with("(default)") {
-            default_idx = num;
-        }
-        println!("  {}. {}", num, name);
+        let clean = name.strip_suffix(" (default)").unwrap_or(name);
+        println!("  {}. {}", i + 2, clean);
     }
     println!();
 
-    let default_label = if default_idx > 0 {
-        default_idx.to_string()
-    } else {
-        "1".to_string()
-    };
-    let input = prompt_raw(&format!("Device [{}]", default_label))?;
+    let input = prompt_raw("Device [1]")?;
 
-    let chosen = if input.is_empty() {
-        if default_idx > 0 { default_idx } else { 1 }
+    let chosen: usize = if input.is_empty() {
+        1
     } else {
         input
-            .parse::<usize>()
+            .parse()
             .map_err(|_| format!("Invalid selection: {}", input))?
     };
 
-    if chosen < 1 || chosen > devices.len() {
+    if chosen < 1 || chosen > devices.len() + 1 {
         return Err(format!("Selection {} out of range", chosen));
     }
 
-    let device_name = &devices[chosen - 1];
-    // Strip " (default)" suffix if present to get the raw device name
-    let clean_name = device_name
-        .strip_suffix(" (default)")
-        .unwrap_or(device_name);
-
-    // If they chose the default device, store empty string (= system default)
-    if chosen == default_idx {
+    if chosen == 1 {
         Ok(String::new())
     } else {
-        Ok(clean_name.to_string())
+        let device_name = &devices[chosen - 2];
+        let clean = device_name.strip_suffix(" (default)").unwrap_or(device_name);
+        Ok(clean.to_string())
     }
 }
 
