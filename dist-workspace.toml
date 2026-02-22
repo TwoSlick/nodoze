@@ -2,7 +2,7 @@
 members = ["cargo:./"]
 
 [dist]
-cargo-dist-version = "0.28.0"
+cargo-dist-version = "0.30.4"
 ci = ["github"]
 targets = [
     "aarch64-apple-darwin",
