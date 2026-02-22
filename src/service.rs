@@ -52,6 +52,12 @@ fn launchd_plist_path() -> Result<PathBuf, String> {
 #[cfg(target_os = "macos")]
 fn install_launchd(exe: &PathBuf) -> Result<(), String> {
     let plist_path = launchd_plist_path()?;
+
+    if let Some(parent) = plist_path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create LaunchAgents directory: {}", e))?;
+    }
+
     let exe_str = exe.to_string_lossy();
 
     let plist = format!(
