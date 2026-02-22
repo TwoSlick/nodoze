@@ -1,6 +1,6 @@
 [package]
 name = "nodoze"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "Keep your speakers awake by playing an inaudible tone periodically"
 license = "MIT"
