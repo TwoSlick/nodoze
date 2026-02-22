@@ -10,14 +10,14 @@ Many external speakers and audio devices enter sleep mode after a period of sile
 # macOS / Linux
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/TwoSlick/nodoze/releases/latest/download/nodoze-installer.sh | sh
 
-# Windows
-powershell -ExecutionPolicy ByPass -c "irm https://github.com/TwoSlick/nodoze/releases/latest/download/nodoze-installer.ps1 | iex"
-
 # Homebrew
 brew install TwoSlick/tap/nodoze
 
+# Windows
+powershell -ExecutionPolicy ByPass -c "irm https://github.com/TwoSlick/nodoze/releases/latest/download/nodoze-installer.ps1 | iex"
+
 # From source
-cargo install nodoze
+cargo install --git https://github.com/TwoSlick/nodoze.git
 ```
 
 ## Features
@@ -63,7 +63,7 @@ cargo build --release
 
 ## Configuration
 
-Config file location: `~/.config/nodoze/config.toml`
+Config file location: `~/.config/nodoze/config.toml` (macOS/Linux) or `%APPDATA%\nodoze\config.toml` (Windows)
 
 Run `nodoze setup` to generate one interactively, or create it manually:
 
@@ -153,8 +153,9 @@ cargo run -- once    # quick smoke test
 Requires ALSA development headers and pkg-config for cpal's Linux audio backend.
 
 ```sh
-# Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Install Rust (https://rust-lang.org/tools/install/)
+sudo apt install rustup    # Debian/Ubuntu
+rustup default stable      # Install the stable toolchain
 
 # Install ALSA dev headers + pkg-config
 sudo apt install libasound2-dev pkg-config    # Debian/Ubuntu
