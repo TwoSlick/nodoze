@@ -33,20 +33,17 @@ cargo install --git https://github.com/TwoSlick/nodoze.git
 ## Quick Start
 
 ```sh
-# Build
-cargo build --release
-
-# Run the setup wizard
-./target/release/nodoze setup
+# Run the setup wizard (optional — defaults work out of the box)
+nodoze setup
 
 # Test with a single tone
-./target/release/nodoze once
+nodoze once
 
 # Run the daemon
-./target/release/nodoze run
+nodoze run
 
 # Install as a system service (starts on login)
-./target/release/nodoze install
+nodoze install
 ```
 
 ## Commands
