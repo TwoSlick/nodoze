@@ -12,7 +12,7 @@ Many external speakers and audio devices enter sleep mode after a period of sile
 - **Sleep/wake aware** — detects system sleep via wall-clock tracking and plays immediately on wake
 - **Configurable** — frequency, duration, interval, volume, fade, and device selection
 - **Interactive setup** — `nodoze setup` wizard walks through configuration
-- **Service install** — one command to run at login (LaunchAgent, systemd, Task Scheduler)
+- **Service install** — one command to run at login (LaunchAgent, systemd, Startup folder)
 
 ## Install
 
@@ -103,9 +103,39 @@ All values have sensible defaults. The config file is optional — without it, n
 |----------|-----------|------|
 | macOS | LaunchAgent | `~/Library/LaunchAgents/com.nodoze.daemon.plist` |
 | Linux | systemd user unit | `~/.config/systemd/user/nodoze.service` |
-| Windows | Task Scheduler | Task named `NoDoze` |
+| Windows | Startup folder | `%APPDATA%\...\Startup\nodoze.vbs` |
 
 On macOS and Linux, the service auto-restarts if it crashes. Remove with `nodoze uninstall`.
+
+## Upgrading
+
+Stop the service before upgrading, then reinstall it after:
+
+```sh
+nodoze uninstall
+```
+
+Then install the new version using the same method you used originally:
+
+```sh
+# macOS / Linux
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/TwoSlick/nodoze/releases/latest/download/nodoze-installer.sh | sh
+
+# Homebrew
+brew upgrade nodoze
+
+# Windows
+powershell -ExecutionPolicy ByPass -c "irm https://github.com/TwoSlick/nodoze/releases/latest/download/nodoze-installer.ps1 | iex"
+
+# From source
+cargo install --git https://github.com/TwoSlick/nodoze.git
+```
+
+Then re-register the service:
+
+```sh
+nodoze install
+```
 
 ## Sleep/Wake Handling
 
