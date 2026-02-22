@@ -212,52 +212,68 @@ fn uninstall_systemd() -> Result<(), String> {
     Ok(())
 }
 
-// ── Windows Task Scheduler ─────────────────────────────────────────
+// ── Windows Startup Folder ─────────────────────────────────────────
+
+#[cfg(target_os = "windows")]
+fn startup_script_path() -> Result<PathBuf, String> {
+    let appdata = std::env::var("APPDATA")
+        .map_err(|_| "Could not determine APPDATA path".to_string())?;
+    Ok(PathBuf::from(appdata)
+        .join("Microsoft")
+        .join("Windows")
+        .join("Start Menu")
+        .join("Programs")
+        .join("Startup")
+        .join("nodoze.vbs"))
+}
 
 #[cfg(target_os = "windows")]
 fn install_windows_task(exe: &PathBuf) -> Result<(), String> {
+    let vbs_path = startup_script_path()?;
     let exe_str = exe.to_string_lossy();
 
-    let status = std::process::Command::new("schtasks")
-        .args([
-            "/Create",
-            "/SC", "ONLOGON",
-            "/TN", "NoDoze",
-            "/TR", &format!("\"{}\" run", exe_str),
-            "/F",
-        ])
-        .status()
-        .map_err(|e| format!("Failed to run schtasks: {}", e))?;
+    // VBScript launches nodoze hidden (no console window)
+    let vbs_content = format!(
+        r#"CreateObject("Wscript.Shell").Run """{}"" run", 0, False"#,
+        exe_str
+    );
 
-    if status.success() {
-        // Also start it immediately
-        let _ = std::process::Command::new("schtasks")
-            .args(["/Run", "/TN", "NoDoze"])
-            .status();
+    std::fs::write(&vbs_path, &vbs_content)
+        .map_err(|e| format!("Failed to write startup script: {}", e))?;
 
-        println!("Service installed as scheduled task: NoDoze");
-        Ok(())
-    } else {
-        Err("schtasks /Create failed".to_string())
-    }
+    // Start it immediately (spawn so we don't block)
+    let _ = std::process::Command::new("wscript.exe")
+        .arg(&vbs_path)
+        .spawn();
+
+    println!("Service installed to Startup folder: {}", vbs_path.display());
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]
 fn uninstall_windows_task() -> Result<(), String> {
-    // End any running instance first
+    // Stop any running instance
+    let _ = std::process::Command::new("taskkill")
+        .args(["/IM", "nodoze.exe", "/F"])
+        .status();
+
+    let vbs_path = startup_script_path()?;
+
+    if vbs_path.exists() {
+        std::fs::remove_file(&vbs_path)
+            .map_err(|e| format!("Failed to remove startup script: {}", e))?;
+        println!("Service uninstalled: {}", vbs_path.display());
+    } else {
+        println!("Service not installed (startup script not found)");
+    }
+
+    // Clean up legacy scheduled task from older versions
     let _ = std::process::Command::new("schtasks")
         .args(["/End", "/TN", "NoDoze"])
         .status();
-
-    let status = std::process::Command::new("schtasks")
+    let _ = std::process::Command::new("schtasks")
         .args(["/Delete", "/TN", "NoDoze", "/F"])
-        .status()
-        .map_err(|e| format!("Failed to run schtasks: {}", e))?;
+        .status();
 
-    if status.success() {
-        println!("Service uninstalled: NoDoze");
-        Ok(())
-    } else {
-        Err("schtasks /Delete failed (task may not exist)".to_string())
-    }
+    Ok(())
 }
