@@ -13,3 +13,4 @@ publish-jobs = ["homebrew"]
 
 [dist.dependencies.apt]
 libasound2-dev = '*'
+pkg-config = '*'

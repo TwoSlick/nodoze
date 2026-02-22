@@ -150,16 +150,16 @@ cargo run -- once    # quick smoke test
 
 ### Linux
 
-Requires ALSA development headers for cpal's Linux audio backend.
+Requires ALSA development headers and pkg-config for cpal's Linux audio backend.
 
 ```sh
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Install ALSA dev headers
-sudo apt install libasound2-dev    # Debian/Ubuntu
-sudo dnf install alsa-lib-devel    # Fedora
-sudo pacman -S alsa-lib            # Arch
+# Install ALSA dev headers + pkg-config
+sudo apt install libasound2-dev pkg-config    # Debian/Ubuntu
+sudo dnf install alsa-lib-devel pkg-config    # Fedora
+sudo pacman -S alsa-lib pkg-config            # Arch
 
 cargo build
 cargo run -- once

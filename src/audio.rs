@@ -1,5 +1,5 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{Device, SampleFormat, StreamConfig};
+use cpal::{BufferSize, Device, SampleFormat, StreamConfig};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -92,9 +92,10 @@ pub fn play_tone(config: &Config) -> Result<(), String> {
     let finished_clone = finished.clone();
     let sample_clock_clone = sample_clock.clone();
 
-    let stream_config: StreamConfig = supported_config.clone().into();
+    let mut stream_config: StreamConfig = supported_config.clone().into();
+    stream_config.buffer_size = BufferSize::Fixed(4096);
 
-    let err_fn = |err| log::error!("Audio stream error: {}", err);
+    let err_fn = |err| log::warn!("Audio stream: {}", err);
 
     let stream = match supported_config.sample_format() {
         SampleFormat::F32 => device.build_output_stream(
